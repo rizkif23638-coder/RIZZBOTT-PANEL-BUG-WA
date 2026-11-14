@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RIZZBOTT PANEL · BUG WA</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="login-logo">
+        <span class="logo-mark">RB</span>
+        <div>
+          <div class="logo-title">RIZZBOTT</div>
+          <div class="logo-sub">PANEL BUG WA</div>
+        </div>
+      </div>
+      <form id="loginForm" class="login-form">
+        <label>Username</label>
+        <input type="text" id="loginUser" autocomplete="username" placeholder="Admin / Developer" required />
+        <label>Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password" placeholder="••••••••" required />
+        <button type="submit" class="btn primary full" id="btnLogin">Login</button>
+        <p class="login-error" id="loginError" hidden></p>
+      </form>
+      <div class="login-hint">Admin · Developer access only</div>
+    </div>
+  </div>
+
+  <div id="appScreen" class="app" hidden>
+    <aside class="sidebar">
+      <div class="logo">
+        <span class="logo-mark">RB</span>
+        <div>
+          <div class="logo-title">RIZZBOTT</div>
+          <div class="logo-sub">PANEL BUG WA</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">Dashboard</button>
+        <button class="nav-item" data-view="devices">Devices</button>
+        <button class="nav-item" data-view="bugs">Bug Tools</button>
+        <button class="nav-item" data-view="messages">Messages</button>
+        <button class="nav-item" data-view="settings">Settings</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div>
+          <div class="user-chip" id="userChip">—</div>
+          <div class="status-pill" id="serverStatus">● offline</div>
+        </div>
+        <button class="btn ghost" id="btnLogout" style="padding:6px 10px;font-size:11px">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="view-dashboard" class="view active">
+        <header class="page-header">
+          <h1>Dashboard</h1>
+          <p class="muted">Overview panel multi-device + bug tools</p>
+        </header>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-label">Devices</div><div class="stat-value" id="statDevices">0</div></div>
+          <div class="stat-card"><div class="stat-label">Connected</div><div class="stat-value" id="statConnected">0</div></div>
+          <div class="stat-card"><div class="stat-label">Uptime</div><div class="stat-value" id="statUptime">—</div></div>
+          <div class="stat-card"><div class="stat-label">Role</div><div class="stat-value" id="statRole" style="font-size:16px">—</div></div>
+        </div>
+        <div class="card">
+          <h2>Quick Add Device</h2>
+          <div class="form-row">
+            <input type="text" id="quickName" placeholder="Nama device (contoh: Acc Utama)" />
+            <button class="btn primary" id="btnQuickAdd">Tambah</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-devices" class="view">
+        <header class="page-header">
+          <h1>Devices</h1>
+          <button class="btn primary" id="btnAddDevice">+ Device Baru</button>
+        </header>
+        <div class="device-grid" id="deviceGrid"></div>
+      </section>
+
+      <section id="view-bugs" class="view">
+        <header class="page-header">
+          <h1>Bug Tools</h1>
+          <p class="muted">Payload real — butuh device connected</p>
+        </header>
+        <div class="card">
+          <h2>Target & Device</h2>
+          <div class="form-col" style="max-width:480px">
+            <label>Device (harus connected)</label>
+            <select id="bugDevice"></select>
+            <label>Target (nomor / jid)</label>
+            <input type="text" id="bugTarget" placeholder="6281234567890 atau 628xxx@s.whatsapp.net" />
+          </div>
+        </div>
+        <div class="bug-grid" id="bugGrid"></div>
+        <div class="card">
+          <h2>Execution Log</h2>
+          <div id="bugLog" class="msg-log"></div>
+        </div>
+      </section>
+
+      <section id="view-messages" class="view">
+        <header class="page-header">
+          <h1>Messages</h1>
+          <p class="muted">Incoming log (live)</p>
+        </header>
+        <div class="card"><div id="msgLog" class="msg-log"></div></div>
+      </section>
+
+      <section id="view-settings" class="view">
+        <header class="page-header"><h1>Settings</h1></header>
+        <div class="card">
+          <h2>Server / Session</h2>
+          <pre id="settingsInfo" class="code-block">Loading...</pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="modalAuth" hidden>
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose">×</button>
+      <h2 id="modalTitle">Scan QR</h2>
+      <div id="modalBody" class="modal-body">
+        <img id="qrImage" src="" alt="QR" hidden />
+        <div id="pairingBox" hidden>
+          <p>WhatsApp → Linked Devices → Link with phone number</p>
+          <div class="pairing-code" id="pairingCode">————</div>
+        </div>
+        <p class="muted" id="modalHint">Menunggu...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalAdd" hidden>
+    <div class="modal-box">
+      <button class="modal-close" id="modalAddClose">×</button>
+      <h2>Device Baru</h2>
+      <div class="form-col">
+        <label>Nama Device</label>
+        <input type="text" id="inputDeviceName" placeholder="Acc Utama / Acc 2" />
+        <label>Metode Auth</label>
+        <select id="inputAuthMethod">
+          <option value="qr">QR Code</option>
+          <option value="pairing">Pairing Code</option>
+        </select>
+        <div id="phoneWrap" hidden>
+          <label>Nomor (format 628xxx)</label>
+          <input type="text" id="inputPhone" placeholder="6281234567890" />
+        </div>
+        <button class="btn primary full" id="btnCreateDevice">Buat & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

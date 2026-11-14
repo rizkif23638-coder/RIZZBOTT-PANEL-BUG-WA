@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "username": "Admin",
+      "password": "RizzBott 1",
+      "role": "admin",
+      "label": "Administrator"
+    },
+    {
+      "username": "Developer",
+      "password": "RizzBott1",
+      "role": "developer",
+      "label": "Developer"
+    }
+  ]
+}
